@@ -1,40 +1,56 @@
+import fs from 'node:fs'
 import { BrowserWindow } from 'electron'
-import robot from 'robotjs'
 
-let checkInterval = null
+let rawStream = null
+let secondInterval = null
 let reportInterval = null
-let lastActivity = Date.now()
+let sawMovementThisSecond = false
 let activeSeconds = 0
 
-function emitUpdate(pct) {
+function emitupdate(pct) {
   const win = BrowserWindow.getAllWindows()[0]
   win?.webContents.send('activity-update', pct.toFixed(2))
 }
 
-export function start() {
-  if (checkInterval) return
-  activeSeconds = 0
-  lastActivity = Date.now()
-  let lastPos = robot.getMousePos()
-
-  checkInterval = setInterval(() => {
-    const now = Date.now()
-    const pos = robot.getMousePos()
-    if (now - lastActivity < 1000 || pos.x !== lastPos.x || pos.y !== lastPos.y) {
-      activeSeconds++
+function onData(chunck) {
+  for (let i = 0; i + 2 < chunck.length; i += 3) {
+    const dx = chunck[i + 1]
+    const dy = chunck[i + 2]
+    if (dx !== 0 || dy !== 0) {
+      sawMovementThisSecond = true
+      break
     }
-    lastPos = pos
+  }
+}
+
+export function start() {
+  if (rawStream) return
+
+  rawStream = fs
+    .createReadStream('/dev/input/mice')
+    .on('data', onData)
+    .on('error', (err) => console.error('Raw mouse error', err))
+
+  sawMovementThisSecond = false
+  activeSeconds = 0
+
+  secondInterval = setInterval(() => {
+    if (sawMovementThisSecond) activeSeconds++
+    sawMovementThisSecond = false
   }, 1000)
 
   reportInterval = setInterval(() => {
-    emitUpdate((activeSeconds / 60) * 100)
+    const pct = (activeSeconds / 60) * 100
+    emitupdate(pct)
     activeSeconds = 0
   }, 60000)
 }
 
 export function stop() {
-  clearInterval(checkInterval)
+  rawStream?.destroy()
+  rawStream = null
+  clearInterval(secondInterval)
   clearInterval(reportInterval)
-  checkInterval = reportInterval = null
-  activeSeconds = 0
+  secondInterval = reportInterval = null
+  sawMovementThisSecond = false
 }

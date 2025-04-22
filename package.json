@@ -2,8 +2,8 @@
   "name": "electron_stopwatch",
   "version": "1.0.0",
   "description": "An Electron application with React",
-  "main": "./src/main/index.js",
-  "preload": "./src/preload/index.js",
+  "main": "./out/main/index.js",
+  "type": "module",
   "author": "example.com",
   "homepage": "https://electron-vite.org",
   "scripts": {

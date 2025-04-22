@@ -12,12 +12,10 @@ export default function App() {
   const [activityPercent, setActivityPercent] = useState(0)
 
   useEffect(() => {
-    // 1) Listen for timer ticks from timer.service.js
     window.timerApi.onTick((seconds) => {
       setElapsed(seconds)
     })
 
-    // 2) Listen for activity updates from activity.service.js
     window.activityApi.onActivityUpdate((percent) => {
       setActivityPercent(percent)
     })
@@ -35,7 +33,7 @@ export default function App() {
 
   const handleReset = () => {
     window.timerApi.reset()
-    setElapsed(0) // ensure immediate UI reset
+    setElapsed(0)
   }
 
   return (
