@@ -2,11 +2,6 @@ import { app, BrowserWindow, ipcMain, Notification, Tray, Menu } from 'electron'
 import * as timerService from './services/timer.services.js'
 import * as activityService from './services/activity.services.js'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-
-// For __dirname support in ES Modules
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 let win = null
 let tray = null
